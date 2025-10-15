@@ -24,7 +24,12 @@ add_custom_target(copy_resources
 )
 
 add_executable(space_shooter main.cpp
-        player.h)
+        player.h
+        entity.h
+        entity.cpp
+        entity.cpp
+        player.cpp
+        player.cpp)
 add_dependencies(space_shooter copy_resources)
 
 target_compile_features(space_shooter PRIVATE cxx_std_20)
