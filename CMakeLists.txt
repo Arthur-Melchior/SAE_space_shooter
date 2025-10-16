@@ -27,8 +27,6 @@ add_executable(space_shooter main.cpp
         player.h
         entity.h
         entity.cpp
-        entity.cpp
-        player.cpp
         player.cpp)
 add_dependencies(space_shooter copy_resources)
 

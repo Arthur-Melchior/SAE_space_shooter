@@ -5,7 +5,6 @@
 #ifndef SPACE_SHOOTER_PLAYER_H
 #define SPACE_SHOOTER_PLAYER_H
 #include "entity.h"
-#include "SFML/Graphics/Drawable.hpp"
 #include "SFML/Graphics/Sprite.hpp"
 #include "SFML/System/Clock.hpp"
 #include "SFML/System/Time.hpp"

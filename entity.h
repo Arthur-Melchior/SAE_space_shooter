@@ -7,14 +7,15 @@
 #include "SFML/Graphics/Sprite.hpp"
 
 enum class HorizontalDirection {
-    Left,
-    Right,
-    None,
+    Left = -1,
+    None = 0,
+    Right = 1,
 };
 
 enum class VerticalDirection {
-    Top,
-    Bottom,
+    Top = -1,
+    None = 0,
+    Bottom = 1,
 };
 
 class Entity {
