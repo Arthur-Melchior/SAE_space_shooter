@@ -31,7 +31,7 @@ add_executable(space_shooter main.cpp
 add_dependencies(space_shooter copy_resources)
 
 target_compile_features(space_shooter PRIVATE cxx_std_20)
-target_link_libraries(space_shooter PRIVATE SFML::Graphics)
+target_link_libraries(space_shooter PRIVATE SFML::Graphics SFML::Audio)
 
 target_compile_options(space_shooter PRIVATE
         $<$<AND:$<CONFIG:Debug>,$<CXX_COMPILER_ID:MSVC>>:/Od /Zi>
