@@ -27,7 +27,9 @@ add_executable(space_shooter main.cpp
         player.h
         entity.h
         entity.cpp
-        player.cpp)
+        player.cpp
+        resources_manager.cpp
+        resources_manager.h)
 add_dependencies(space_shooter copy_resources)
 
 target_compile_features(space_shooter PRIVATE cxx_std_20)

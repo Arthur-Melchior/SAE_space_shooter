@@ -33,21 +33,34 @@ bool Player::can_shoot() {
 void Player::shoot(std::pmr::vector<Entity> &existing_bullets) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::B)) {
         if (can_shoot()) {
+            auto bullet_position = sf::Vector2f(ship_sprite.getPosition().x + ship_sprite.getGlobalBounds().size.x / 2,
+                                                ship_sprite.getPosition().y);
             Entity entity(bullet_sprite,
                           HorizontalDirection::None,
                           VerticalDirection::Top,
                           1, 3);
-            entity.sprite.setPosition({ship_sprite.getPosition().x, ship_sprite.getPosition().y});
+            entity.sprite.setOrigin({
+                entity.sprite.getGlobalBounds().size.x / 2, entity.sprite.getGlobalBounds().size.y / 2
+            });
+            entity.sprite.setPosition(bullet_position);
             Entity entity2(bullet_sprite,
                            HorizontalDirection::Left,
                            VerticalDirection::Top,
-                           1, 3);
-            entity2.sprite.setPosition({ship_sprite.getPosition().x, ship_sprite.getPosition().y});
+                           3, 3);
+            entity2.sprite.setOrigin({
+                entity2.sprite.getGlobalBounds().size.x / 2, entity2.sprite.getGlobalBounds().size.y / 2
+            });
+            entity2.sprite.setRotation(sf::degrees(-45));
+            entity2.sprite.setPosition(bullet_position);
             Entity entity3(bullet_sprite,
                            HorizontalDirection::Right,
                            VerticalDirection::Top,
-                           1, 3);
-            entity3.sprite.setPosition({ship_sprite.getPosition().x, ship_sprite.getPosition().y});
+                           3, 3);
+            entity3.sprite.setOrigin({
+                entity3.sprite.getGlobalBounds().size.x / 2, entity3.sprite.getGlobalBounds().size.y / 2
+            });
+            entity3.sprite.setRotation(sf::degrees(45));
+            entity3.sprite.setPosition(bullet_position);
             existing_bullets.emplace_back(entity);
             existing_bullets.emplace_back(entity2);
             existing_bullets.emplace_back(entity3);
