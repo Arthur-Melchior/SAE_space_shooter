@@ -6,6 +6,7 @@
 #define SPACE_SHOOTER_PLAYER_H
 #include "entity.h"
 #include "SFML/Audio/Sound.hpp"
+#include "SFML/Graphics/RenderWindow.hpp"
 #include "SFML/Graphics/Sprite.hpp"
 #include "SFML/System/Clock.hpp"
 #include "SFML/System/Time.hpp"
@@ -17,9 +18,9 @@ public:
     sf::Clock clock;
     float reload_speed;
     float time_elapsed;
-    
 
-    void move();
+
+    void move(const sf::RenderWindow& window);
     bool can_shoot();
     void shoot(std::pmr::vector<Entity> &existing_bullets);
 
