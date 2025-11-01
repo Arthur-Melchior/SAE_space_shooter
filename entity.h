@@ -20,6 +20,7 @@ enum class VerticalDirection {
 
 class Entity {
 public:
+    void center_sprite();
     sf::Sprite sprite;
     HorizontalDirection horizontal_direction;
     VerticalDirection vertical_direction;

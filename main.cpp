@@ -1,10 +1,12 @@
 #include <cmath>
 #include <fstream>
+#include <iostream>
 #include <SFML/Graphics.hpp>
 
 #include "background.h"
 #include "entity.h"
 #include "player.h"
+#include "resources_manager.h"
 
 void delete_out_of_bounds(const sf::RenderWindow &window, std::pmr::vector<Entity> &entities) {
     int i = 0;
@@ -29,85 +31,46 @@ int main() {
     window.setFramerateLimit(60);
 
     std::pmr::string assets_folder = "./_assets/kenney_pixel-shmup";
+    ResourceManager resource_manager(assets_folder);
 
-    sf::Texture ship_texture;
-    if (!ship_texture.loadFromFile(std::format("{}/Ships/ship_0000.png", assets_folder))) {
-        return -1;
-    }
+    auto *ship_sprite = resource_manager.find_sprite("ship_0000");
 
-    sf::Texture bullet_texture;
-    if (!bullet_texture.loadFromFile(std::format("{}/Tiles/tile_0000.png", assets_folder))) {
-        return -1;
-    }
-
-    sf::Texture grass_texture;
-    if (!grass_texture.loadFromFile(std::format("{}/Tiles/tile_0110.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
-    };
-
-    const sf::Clock clock;
-    Player player(sf::Sprite(ship_texture), sf::Sprite(bullet_texture), clock, 0.5, 0);
+    sf::Clock clock;
+    Player player(*resource_manager.find_sprite("ship_0000"),
+                  *resource_manager.find_sprite("tile_0000"),
+                  clock,
+                  0.5,
+                  0);
     player.ship_sprite.setPosition({100.f, 100.f});
+    player.ship_sprite.setOrigin({
+        player.ship_sprite.getGlobalBounds().size.x / 4,
+        player.ship_sprite.getGlobalBounds().size.y / 4
+    });
 
     std::pmr::vector<Road> roads;
     std::vector<sf::Sprite> temp;
-    std::vector<sf::Texture *> temp2;
 
-    sf::Texture road_texture1;
-    if (!road_texture1.loadFromFile(std::format("{}/Roads/road_001.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
+    for (int i = 1; i < 9; ++i) {
+        sf::Sprite sprite(*resource_manager.find_sprite(std::format("road_00{}", i)));
+        temp.emplace_back(sprite);
     }
-    sf::Sprite road_spite1(road_texture1);
-    sf::Texture road_texture2;
-    if (!road_texture2.loadFromFile(std::format("{}/Roads/road_002.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
-    }
-    sf::Sprite road_spite2(road_texture2);
-    sf::Texture road_texture3;
-    if (!road_texture3.loadFromFile(std::format("{}/Roads/road_003.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
-    }
-    sf::Sprite road_spite3(road_texture3);
-    sf::Texture road_texture4;
-    if (!road_texture4.loadFromFile(std::format("{}/Roads/road_004.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
-    }
-    sf::Sprite road_spite4(road_texture4);
-    sf::Texture road_texture5;
-    if (!road_texture5.loadFromFile(std::format("{}/Roads/road_005.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
-    }
-    sf::Sprite road_spite5(road_texture5);
-    sf::Texture road_texture6;
-    if (!road_texture6.loadFromFile(std::format("{}/Roads/road_006.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
-    }
-    sf::Sprite road_spite6(road_texture6);
-    sf::Texture road_texture7;
-    if (!road_texture7.loadFromFile(std::format("{}/Roads/road_007.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
-    }
-    sf::Sprite road_spite7(road_texture7);
-    sf::Texture road_texture8;
-    if (!road_texture8.loadFromFile(std::format("{}/Roads/road_008.png", assets_folder))) {
-        throw std::invalid_argument(std::format("no files found in {}", assets_folder));
-    }
-    sf::Sprite road_spite8(road_texture8);
 
+    roads.emplace_back(Road(temp[0], road_direction::bottom, road_direction::top));
+    roads.emplace_back(Road(temp[1], road_direction::bottom, road_direction::top));
+    roads.emplace_back(Road(temp[2], road_direction::bottom, road_direction::left));
+    roads.emplace_back(Road(temp[3], road_direction::right, road_direction::left));
+    roads.emplace_back(Road(temp[4], road_direction::right, road_direction::top));
+    roads.emplace_back(Road(temp[5], road_direction::bottom, road_direction::right));
+    roads.emplace_back(Road(temp[6], road_direction::left, road_direction::right));
+    roads.emplace_back(Road(temp[7], road_direction::left, road_direction::top));
 
-    roads.emplace_back(Road(road_spite1, road_texture1, road_direction::bottom, road_direction::top));
-    roads.emplace_back(Road(road_spite2, road_texture2, road_direction::bottom, road_direction::top));
-    roads.emplace_back(Road(road_spite3, road_texture3, road_direction::bottom, road_direction::left));
-    roads.emplace_back(Road(road_spite4, road_texture4, road_direction::right, road_direction::left));
-    roads.emplace_back(Road(road_spite5, road_texture5, road_direction::right, road_direction::top));
-    roads.emplace_back(Road(road_spite6, road_texture6, road_direction::bottom, road_direction::right));
-    roads.emplace_back(Road(road_spite7, road_texture7, road_direction::left, road_direction::right));
-    roads.emplace_back(Road(road_spite8, road_texture8, road_direction::left, road_direction::top));
-
-    Background background(window, roads, clock, assets_folder, sf::Sprite(grass_texture), 16, 11, 1);
+    Background background(window, roads, clock, assets_folder, *resource_manager.find_sprite("tile_0110"), 16, 11, 1);
 
     std::pmr::vector<Entity> enemies;
     std::pmr::vector<Entity> bullets;
+
+    float time = 0;
+
     while (window.isOpen()) {
         // check all the window's events that were triggered since the last iteration of the loop
         while (const std::optional event = window.pollEvent()) {
@@ -140,6 +103,19 @@ int main() {
             }
             bullet.move();
             window.draw(bullet.sprite);
+        }
+
+        time += clock.restart().asSeconds();
+
+        if (time > 1) {
+            Entity entity(*ship_sprite, HorizontalDirection::Left, VerticalDirection::Bottom, 1, 1);
+            entity.sprite.setPosition({400,0});
+            Entity entity2(*ship_sprite, HorizontalDirection::Right, VerticalDirection::Bottom, 1, 1);
+            entity2.sprite.setPosition({400,0});
+            enemies.emplace_back(entity);
+            enemies.emplace_back(entity2);
+            time = 0;
+            clock.reset();
         }
 
         for (auto &enemy: enemies) {

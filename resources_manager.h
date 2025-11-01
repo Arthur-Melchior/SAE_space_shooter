@@ -14,22 +14,17 @@ template<typename T>
 struct Resource {
     std::string name;
     T resource;
-
-    Resource() = default;
-
-    Resource(std::string n, const T &res)
-        : name(std::move(n)), resource(res) {
-    }
 };
 
 class ResourceManager {
 public:
+    ResourceManager(const std::pmr::string & assets_folder);
+    sf::Sprite *find_sprite(const std::string &);
+
+private:
+    void load_resources(const std::pmr::string &);
     std::vector<Resource<sf::Texture> > loaded_textures;
     std::vector<Resource<sf::Sprite> > loaded_sprites;
-
-    void load_sprites(const std::string &);
-
-    sf::Sprite *find_sprite(const std::string &);
 };
 
 #endif //SPACE_SHOOTER_RESOURCES_MANAGER_H

@@ -44,17 +44,20 @@ void Player::shoot(std::pmr::vector<Entity> &existing_bullets) {
             Entity entity(bullet_sprite,
                           HorizontalDirection::None,
                           VerticalDirection::Top,
-                          1, 3);
+                          3, 3);
+            entity.center_sprite();
             entity.sprite.setPosition({x, y});
             Entity entity2(bullet_sprite,
                            HorizontalDirection::Left,
                            VerticalDirection::Top,
-                           1, 3);
+                           3, 3);
+            entity2.center_sprite();
             entity2.sprite.setPosition({x, y});
             Entity entity3(bullet_sprite,
                            HorizontalDirection::Right,
                            VerticalDirection::Top,
-                           1, 3);
+                           3, 3);
+            entity3.center_sprite();
             entity3.sprite.setPosition({x, y});
             existing_bullets.emplace_back(entity);
             existing_bullets.emplace_back(entity2);

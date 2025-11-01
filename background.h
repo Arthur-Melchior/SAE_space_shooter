@@ -20,12 +20,11 @@ enum class road_direction {
 
 struct Road {
     sf::Sprite sprite;
-    sf::Texture &texture;
     road_direction road_start;
     road_direction road_end;
 };
 
-class Background {
+class Background{
 public:
     sf::Clock clock;
 
