@@ -11,7 +11,6 @@
 #include "SFML/Graphics/Texture.hpp"
 
 Background::Background(sf::RenderWindow &window,
-                       std::pmr::vector<Road> roads,
                        sf::Clock clock,
                        std::pmr::string assets_path,
                        sf::Sprite grass_sprite,
@@ -20,7 +19,6 @@ Background::Background(sf::RenderWindow &window,
                        float background_speed) : clock(clock),
                                                  assets_path(assets_path),
                                                  grass_sprite(grass_sprite),
-                                                 roads(roads),
                                                  tile_size(tile_size),
                                                  tiles_per_window(tiles_per_window),
                                                  background_speed(background_speed),
@@ -28,12 +26,6 @@ Background::Background(sf::RenderWindow &window,
                                                  tile_scale(distance_per_tile / tile_size),
                                                  road_index(std::round(tiles_per_window / 2)),
                                                  time_elapsed(0) {
-    for (auto &road: roads) {
-        road.sprite.setScale({
-            tile_scale,
-            tile_scale
-        });
-    }
 
     grass_sprite.setScale({
         tile_scale,
@@ -64,10 +56,4 @@ void Background::draw(sf::RenderWindow &window) {
             window.draw(tile);
         }
     }
-}
-
-void Background::draw_road(sf::RenderWindow &window) {
-    roads[0].sprite.setScale({tile_scale,tile_scale});
-    roads[0].sprite.setPosition({10,10});
-    window.draw(roads[0].sprite);
 }

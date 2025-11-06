@@ -20,10 +20,12 @@ public:
     float delta_time;
 
 
-    void move(const sf::RenderWindow& window);
-    bool can_shoot();
+    void move(const sf::RenderWindow &window);
+
     void shoot(std::pmr::vector<Entity> &existing_bullets);
 
+private:
+    bool can_shoot();
 };
 
 #endif //SPACE_SHOOTER_PLAYER_H

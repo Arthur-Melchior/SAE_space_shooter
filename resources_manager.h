@@ -19,7 +19,10 @@ struct Resource {
 
 class ResourceManager {
 public:
-    ResourceManager(const std::pmr::string & assets_folder);
+
+    explicit ResourceManager(const std::pmr::string & assets_folder);
+    ResourceManager();
+
     sf::Sprite *find_sprite(const std::string &);
     sf::Font font;
 

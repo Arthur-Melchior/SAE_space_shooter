@@ -10,6 +10,9 @@ ResourceManager::ResourceManager(const std::pmr::string & assets_folder) {
     load_resources(assets_folder);
 }
 
+ResourceManager::ResourceManager() {
+}
+
 
 void ResourceManager::load_resources(const std::pmr::string &assets_folder) {
     for (const auto &file: std::filesystem::recursive_directory_iterator(assets_folder)) {

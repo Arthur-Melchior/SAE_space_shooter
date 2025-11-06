@@ -33,7 +33,11 @@ add_executable(space_shooter main.cpp
         resources_manager.h
         resources_manager.cpp
         state_manager.cpp
-        state_manager.h)
+        state_manager.h
+        game.cpp
+        game.h
+        hud_manager.cpp
+        hud_manager.h)
 add_dependencies(space_shooter copy_resources)
 
 target_compile_features(space_shooter PRIVATE cxx_std_20)

@@ -4,6 +4,8 @@
 
 #ifndef SPACE_SHOOTER_ENTITY_H
 #define SPACE_SHOOTER_ENTITY_H
+#include <vector>
+
 #include "SFML/Graphics/Sprite.hpp"
 
 enum class HorizontalDirection {
@@ -20,14 +22,18 @@ enum class VerticalDirection {
 
 class Entity {
 public:
-    void center_sprite();
+    void center_origin();
     sf::Sprite sprite;
     HorizontalDirection horizontal_direction;
     VerticalDirection vertical_direction;
     float horizontal_speed;
     float vertical_speed;
     float delta_time;
+    bool zig_zag;
+    float test;
     void move();
+
+    void shoot(const float elapsed_time, const float reload_speed, std::pmr::vector<Entity> &bullets, const sf::Sprite &bullet_sprite);
 };
 
 

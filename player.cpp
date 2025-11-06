@@ -27,7 +27,6 @@ bool Player::can_shoot() {
     delta_time += clock.restart().asSeconds();
 
     if (delta_time >= reload_speed) {
-        clock.reset();
         delta_time = 0;
         return true;
     }
@@ -37,7 +36,7 @@ bool Player::can_shoot() {
 
 
 void Player::shoot(std::pmr::vector<Entity> &existing_bullets) {
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::B)) {
+    {
         if (can_shoot()) {
             auto x = ship_sprite.getPosition().x + ship_sprite.getGlobalBounds().size.x / 4;
             auto y = ship_sprite.getPosition().y;
@@ -45,19 +44,20 @@ void Player::shoot(std::pmr::vector<Entity> &existing_bullets) {
                           HorizontalDirection::None,
                           VerticalDirection::Top,
                           3, 3);
-            entity.center_sprite();
+            entity.center_origin();
             entity.sprite.setPosition({x, y});
+            entity.zig_zag = true;
             Entity entity2(bullet_sprite,
                            HorizontalDirection::Left,
                            VerticalDirection::Top,
                            3, 3);
-            entity2.center_sprite();
+            entity2.center_origin();
             entity2.sprite.setPosition({x, y});
             Entity entity3(bullet_sprite,
                            HorizontalDirection::Right,
                            VerticalDirection::Top,
                            3, 3);
-            entity3.center_sprite();
+            entity3.center_origin();
             entity3.sprite.setPosition({x, y});
             existing_bullets.emplace_back(entity);
             existing_bullets.emplace_back(entity2);
