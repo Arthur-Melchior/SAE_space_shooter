@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "SFML/Graphics/Font.hpp"
 #include "SFML/Graphics/Sprite.hpp"
 #include "SFML/Graphics/Texture.hpp"
 
@@ -20,6 +21,7 @@ class ResourceManager {
 public:
     ResourceManager(const std::pmr::string & assets_folder);
     sf::Sprite *find_sprite(const std::string &);
+    sf::Font font;
 
 private:
     void load_resources(const std::pmr::string &);

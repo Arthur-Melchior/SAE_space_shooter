@@ -26,6 +26,7 @@ public:
     VerticalDirection vertical_direction;
     float horizontal_speed;
     float vertical_speed;
+    float delta_time;
     void move();
 };
 

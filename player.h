@@ -17,7 +17,7 @@ public:
     sf::Sprite bullet_sprite;
     sf::Clock clock;
     float reload_speed;
-    float time_elapsed;
+    float delta_time;
 
 
     void move(const sf::RenderWindow& window);

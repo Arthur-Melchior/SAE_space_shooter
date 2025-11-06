@@ -24,11 +24,11 @@ void Player::move(const sf::RenderWindow &window) {
 }
 
 bool Player::can_shoot() {
-    time_elapsed += clock.restart().asSeconds();
+    delta_time += clock.restart().asSeconds();
 
-    if (time_elapsed >= reload_speed) {
+    if (delta_time >= reload_speed) {
         clock.reset();
-        time_elapsed = 0;
+        delta_time = 0;
         return true;
     }
 

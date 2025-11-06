@@ -7,6 +7,7 @@
 #include "entity.h"
 #include "player.h"
 #include "resources_manager.h"
+#include "state_manager.h"
 
 void delete_out_of_bounds(const sf::RenderWindow &window, std::pmr::vector<Entity> &entities) {
     int i = 0;
@@ -32,8 +33,10 @@ int main() {
 
     std::pmr::string assets_folder = "./_assets/kenney_pixel-shmup";
     ResourceManager resource_manager(assets_folder);
+    StateManager state_manager(0);
 
     auto *ship_sprite = resource_manager.find_sprite("ship_0000");
+    auto *explosion_sprite = resource_manager.find_sprite("explosion");
 
     sf::Clock clock;
     Player player(*resource_manager.find_sprite("ship_0000"),
@@ -64,12 +67,26 @@ int main() {
     roads.emplace_back(Road(temp[6], road_direction::left, road_direction::right));
     roads.emplace_back(Road(temp[7], road_direction::left, road_direction::top));
 
-    Background background(window, roads, clock, assets_folder, *resource_manager.find_sprite("tile_0110"), 16, 11, 1);
+    Background background(window,
+                          roads,
+                          clock,
+                          assets_folder,
+                          *resource_manager.find_sprite("tile_0110"),
+                          16, 11,
+                          1);
+
+    auto explosion_scale = sf::Vector2f(16 / explosion_sprite->getGlobalBounds().size.x,
+                                        16 / explosion_sprite->getGlobalBounds().size.y);
 
     std::pmr::vector<Entity> enemies;
     std::pmr::vector<Entity> bullets;
+    std::pmr::vector<Entity> explosions;
 
     float time = 0;
+    sf::Text score(resource_manager.font);
+    score.setPosition({400, 100});
+
+    bool game_over = false;
 
     while (window.isOpen()) {
         // check all the window's events that were triggered since the last iteration of the loop
@@ -79,24 +96,33 @@ int main() {
                 window.close();
         }
 
-        player.move(window);
-        player.shoot(bullets);
-
         window.clear(sf::Color::Black);
 
-        //toutes les x secondes rajouté 2 nouvelles lignes et supprimer les 2 dernières
-
+        //Display background
         background.draw(window);
-        background.draw_road(window);
+
+        //Player logic
+        player.move(window);
+        player.shoot(bullets);
         window.draw(player.ship_sprite);
 
-        delete_out_of_bounds(window, enemies);
+        //Bullets logic
         delete_out_of_bounds(window, bullets);
-
         for (auto &bullet: bullets) {
+            //Check for collision with enemies
             for (int i = 0; i < enemies.size(); ++i) {
-                if (auto &entity = enemies[i]; entity.sprite.getGlobalBounds().findIntersection(
+                if (auto &enemy = enemies[i]; enemy.sprite.getGlobalBounds().findIntersection(
                     bullet.sprite.getGlobalBounds())) {
+                    //increase score, creates an explosion and removes enemy
+                    state_manager.score++;
+                    auto explosion = Entity(*explosion_sprite,
+                                            HorizontalDirection::None,
+                                            VerticalDirection::None,
+                                            0, 0,
+                                            0);
+                    explosion.sprite.setScale(explosion_scale);
+                    explosion.sprite.setPosition(enemy.sprite.getPosition());
+                    explosions.emplace_back(explosion);
                     enemies[i] = enemies.back();
                     enemies.pop_back();
                 }
@@ -105,13 +131,17 @@ int main() {
             window.draw(bullet.sprite);
         }
 
-        time += clock.restart().asSeconds();
+        //HUD logic
+        score.setString(std::format("score : {}", state_manager.score));
+
+        //Enemies logic
+        delete_out_of_bounds(window, enemies);
 
         if (time > 1) {
             Entity entity(*ship_sprite, HorizontalDirection::Left, VerticalDirection::Bottom, 1, 1);
-            entity.sprite.setPosition({400,0});
+            entity.sprite.setPosition({400, 0});
             Entity entity2(*ship_sprite, HorizontalDirection::Right, VerticalDirection::Bottom, 1, 1);
-            entity2.sprite.setPosition({400,0});
+            entity2.sprite.setPosition({400, 0});
             enemies.emplace_back(entity);
             enemies.emplace_back(entity2);
             time = 0;
@@ -119,10 +149,23 @@ int main() {
         }
 
         for (auto &enemy: enemies) {
+            //check for collision with player
+            if (enemy.sprite.getGlobalBounds().findIntersection(player.ship_sprite.getGlobalBounds())) {
+                game_over = true;
+            }
             enemy.move();
             window.draw(enemy.sprite);
         }
 
+        //Explosions logic
+        for (auto explosion: explosions) {
+            explosion.delta_time += clock.getElapsedTime().asSeconds();
+            if (explosion.delta_time < 1) {
+                window.draw(explosion.sprite);
+            }
+        }
+
+        time += clock.restart().asSeconds();
         window.display();
     }
 

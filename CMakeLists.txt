@@ -31,7 +31,9 @@ add_executable(space_shooter main.cpp
         background.h
         background.cpp
         resources_manager.h
-        resources_manager.cpp)
+        resources_manager.cpp
+        state_manager.cpp
+        state_manager.h)
 add_dependencies(space_shooter copy_resources)
 
 target_compile_features(space_shooter PRIVATE cxx_std_20)
