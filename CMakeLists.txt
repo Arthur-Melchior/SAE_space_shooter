@@ -4,7 +4,6 @@ project(space_shooter)
 set(CMAKE_CXX_STANDARD 20)
 set(SFML_DIR "/_deps/sfml-build")
 
-
 include(FetchContent)
 FetchContent_Declare(SFML
         GIT_REPOSITORY https://github.com/SFML/SFML.git
@@ -17,28 +16,23 @@ FetchContent_MakeAvailable(SFML)
 # only copies if files are different
 file(COPY ${CMAKE_SOURCE_DIR}/_assets DESTINATION ${CMAKE_BINARY_DIR}/_assets)
 
-add_custom_target(copy_resources
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/_assets
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/_assets ${CMAKE_BINARY_DIR}/_assets
-        COMMENT "🔄 Copying all resources to build directory"
+add_executable(space_shooter
+        src/main.cpp
+        include/game.h
+        include/player.h
+        include/entity.h
+        include/background.h
+        include/resources_manager.h
+        include/state_manager.h
+        include/enemy_spawner.h
+        src/game.cpp
+        src/player.cpp
+        src/entity.cpp
+        src/background.cpp
+        src/resources_manager.cpp
+        src/state_manager.cpp
+        src/enemy_spawner.cpp
 )
-
-add_executable(space_shooter main.cpp
-        player.h
-        entity.h
-        entity.cpp
-        player.cpp
-        background.h
-        background.cpp
-        resources_manager.h
-        resources_manager.cpp
-        state_manager.cpp
-        state_manager.h
-        game.cpp
-        game.h
-        hud_manager.cpp
-        hud_manager.h)
-add_dependencies(space_shooter copy_resources)
 
 target_compile_features(space_shooter PRIVATE cxx_std_20)
 target_link_libraries(space_shooter PRIVATE SFML::Graphics SFML::Audio)
