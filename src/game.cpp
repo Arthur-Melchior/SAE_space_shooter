@@ -18,15 +18,17 @@ void Game::setup() {
     window_ = sf::RenderWindow(sf::VideoMode({800, 600}), "space shooter");
     window_.setFramerateLimit(60);
 
-    const std::pmr::string assets_folder = "./_assets/kenney_pixel-shmup";
+    const std::pmr::string assets_folder = "./_assets";
     resource_manager_ = ResourceManager(assets_folder);
     state_manager_ = StateManager();
     enemy_spawner_.emplace(window_);
+    hud_manager_ = HudManager();
 
     clock_ = sf::Clock();
     player_ = Player(*resource_manager_.find_sprite("ship_0000"),
                      *resource_manager_.find_sprite("tile_0000"),
                      clock_,
+                     BulletType::simple,
                      0.5,
                      0);
     player_->ship_sprite.setPosition({100.f, 100.f});
@@ -46,7 +48,26 @@ void Game::setup() {
     bullets_ = std::pmr::vector<Entity>();
     explosions_ = std::pmr::vector<Entity>();
 
-    show_bounding_box_ = false;
+    hud_manager_.main_menu_play.emplace(resource_manager_.font);
+    hud_manager_.main_menu_title.emplace(resource_manager_.font);
+    hud_manager_.score_text.emplace(resource_manager_.font);
+    hud_manager_.game_over_text.emplace(resource_manager_.font);
+    hud_manager_.win_text.emplace(resource_manager_.font);
+    hud_manager_.debug_enemies.emplace(resource_manager_.font);
+    hud_manager_.debug_bullets.emplace(resource_manager_.font);
+
+    hud_manager_.main_menu_title->setString("SAE SPACE SHOOTER");
+    hud_manager_.main_menu_title->setPosition({300, 200});
+    hud_manager_.main_menu_play->setString("PRESS ENTER TO PLAY");
+    hud_manager_.main_menu_play->setPosition({300, 500});
+    hud_manager_.game_over_text->setString("game over");
+    hud_manager_.game_over_text->setPosition({300, 300});
+    hud_manager_.win_text->setString("you won");
+    hud_manager_.win_text->setPosition({300, 300});
+    hud_manager_.debug_enemies->setPosition({0, 200});
+    hud_manager_.debug_bullets->setPosition({0, 400});
+
+    show_debug_info_ = false;
     game_over_ = false;
 }
 
@@ -64,16 +85,8 @@ void Game::mainMenu() {
             }
         }
         window_.clear(sf::Color::Black);
-        sf::Text main_text(resource_manager_.font);
-        main_text.setString("SAE SPACE SHOOTER");
-        main_text.setPosition({300, 200});
-
-        sf::Text play_text(resource_manager_.font);
-        play_text.setString("PRESS ENTER TO PLAY");
-        play_text.setPosition({300, 500});
-
-        window_.draw(main_text);
-        window_.draw(play_text);
+        window_.draw(hud_manager_.main_menu_title.value());
+        window_.draw(hud_manager_.main_menu_play.value());
         window_.display();
     }
 }
@@ -81,11 +94,7 @@ void Game::mainMenu() {
 bool Game::loop() {
     resource_manager_.main_song.play();
     float enemy_spawn_timer = 0;
-
-    sf::Text score(resource_manager_.font);
-    sf::Text game_over_text(resource_manager_.font);
-    game_over_text.setString("game over");
-    game_over_text.setPosition({300, 300});
+    float power_up_spawn_timer = 0;
 
     while (window_.isOpen()) {
         //Event logic
@@ -94,10 +103,12 @@ bool Game::loop() {
                 window_.close();
             if (event->is<sf::Event::KeyPressed>()) {
                 if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::X)) {
-                    show_bounding_box_ = !show_bounding_box_;
+                    show_debug_info_ = !show_debug_info_;
                 }
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter) && game_over_) {
-                    game_over_ = !game_over_;
+                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Enter) && (game_over_ || game_won_)) {
+                    game_over_ = false;
+                    game_won_ = false;
+                    state_manager_.score = 0;
                     enemies_.clear();
                     resource_manager_.main_song.play();
                 }
@@ -106,7 +117,6 @@ bool Game::loop() {
 
         window_.clear(sf::Color::Black);
 
-
         //Display background_
         background_->draw(window_);
 
@@ -114,9 +124,33 @@ bool Game::loop() {
         if (!game_over_) {
             player_->move(window_);
             window_.draw(player_->ship_sprite);
-            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::B)) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space)) {
                 player_->shoot(bullets_);
             }
+        }
+
+        //Power up logic
+        deleteOutOfBounds(power_ups);
+
+        power_up_spawn_timer += clock_.getElapsedTime().asSeconds();
+        if (power_up_spawn_timer > 5) {
+            power_ups.emplace_back(enemy_spawner_->spawnEnemy(*resource_manager_.find_sprite("tile_0070")));
+            power_up_spawn_timer = 0;
+        }
+
+        for (int i = 0; i < power_ups.size(); ++i) {
+            auto &power_up = power_ups[i];
+            if (power_up.sprite.getGlobalBounds().findIntersection(player_->ship_sprite.getGlobalBounds())) {
+                player_->current_bullet_type = static_cast<BulletType>(
+                    static_cast<int>(player_->current_bullet_type) + 1);
+                if (static_cast<int>(player_->current_bullet_type) > 5) {
+                    player_->current_bullet_type = triple_cone;
+                }
+                power_ups.erase(power_ups.begin() + i);
+                continue;
+            }
+            power_up.move();
+            window_.draw(power_up.sprite);
         }
 
         //Bullets logic
@@ -155,31 +189,38 @@ bool Game::loop() {
         }
 
         //HUD logic
-        score.setString(std::format("score : {}", state_manager_.score));
-        window_.draw(score);
+        hud_manager_.score_text->setString(std::format("score : {}", state_manager_.score));
+        window_.draw(hud_manager_.score_text.value());
+        if (game_won_) {
+            window_.draw(hud_manager_.win_text.value());
+            window_.draw(hud_manager_.main_menu_play.value());
+        }
         if (game_over_) {
-            window_.draw(game_over_text);
+            window_.draw(hud_manager_.game_over_text.value());
+            window_.draw(hud_manager_.main_menu_play.value());
         }
 
         //Enemies logic
         deleteOutOfBounds(enemies_);
 
-        enemy_spawn_timer += clock_.getElapsedTime().asSeconds();
-        if (enemy_spawn_timer > 1) {
-            enemies_.emplace_back(enemy_spawner_->spawnEnemy(*resource_manager_.find_sprite("ship_0012")));
-            enemy_spawn_timer = 0;
-        }
-
-        for (auto &enemy: enemies_) {
-            //check for collision with player_
-            if (enemy.sprite.getGlobalBounds().findIntersection(player_->ship_sprite.getGlobalBounds())) {
-                game_over_ = true;
+        if (!game_won_) {
+            enemy_spawn_timer += clock_.getElapsedTime().asSeconds();
+            if (enemy_spawn_timer > 1) {
+                enemies_.emplace_back(enemy_spawner_->spawnEnemy(*resource_manager_.find_sprite("ship_0012")));
+                enemy_spawn_timer = 0;
             }
-            enemy.move();
-            auto *bullet_sprite = resource_manager_.find_sprite("tile_0003");
-            bullet_sprite->setRotation(sf::degrees(180));
-            enemy.shoot(clock_.getElapsedTime().asSeconds(), 1.5, bullets_, *bullet_sprite);
-            window_.draw(enemy.sprite);
+
+            for (auto &enemy: enemies_) {
+                //check for collision with player_
+                if (enemy.sprite.getGlobalBounds().findIntersection(player_->ship_sprite.getGlobalBounds())) {
+                    game_over_ = true;
+                }
+                enemy.move();
+                auto *bullet_sprite = resource_manager_.find_sprite("tile_0003");
+                bullet_sprite->setRotation(sf::degrees(180));
+                enemy.shoot(clock_.getElapsedTime().asSeconds(), 1.5, bullets_, *bullet_sprite);
+                window_.draw(enemy.sprite);
+            }
         }
 
         //Explosions logic
@@ -194,7 +235,7 @@ bool Game::loop() {
         }
 
         //Debug logic
-        if (show_bounding_box_) {
+        if (show_debug_info_) {
             for (const auto &enemy: enemies_) {
                 auto sprite = enemy.sprite;
                 const sf::FloatRect bounds = sprite.getGlobalBounds();
@@ -208,12 +249,35 @@ bool Game::loop() {
 
                 window_.draw(boundingBox);
             }
+            for (const auto &bullet: bullets_) {
+                auto sprite = bullet.sprite;
+                const sf::FloatRect bounds = sprite.getGlobalBounds();
+
+                sf::RectangleShape boundingBox;
+                boundingBox.setPosition(bounds.position);
+                boundingBox.setSize(bounds.size);
+                boundingBox.setFillColor(sf::Color::Transparent);
+                boundingBox.setOutlineColor(sf::Color::Red);
+                boundingBox.setOutlineThickness(1.f);
+
+                window_.draw(boundingBox);
+            }
+
+            hud_manager_.debug_enemies->setString(std::format("Enemies : {}", enemies_.size()));
+            hud_manager_.debug_bullets->setString(std::format("Bullets : {}", bullets_.size()));
+
+            window_.draw(hud_manager_.debug_enemies.value());
+            window_.draw(hud_manager_.debug_bullets.value());
         }
 
         //Final logic
         if (game_over_) {
             resource_manager_.main_song.pause();
             state_manager_.score = 0;
+        }
+        if (state_manager_.score >= 50) {
+            game_won_ = true;
+            enemies_.clear();
         }
         clock_.restart();
         window_.display();

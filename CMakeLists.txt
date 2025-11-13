@@ -25,6 +25,7 @@ add_executable(space_shooter
         include/resources_manager.h
         include/state_manager.h
         include/enemy_spawner.h
+        include/hud_manager.h
         src/game.cpp
         src/player.cpp
         src/entity.cpp
@@ -32,6 +33,7 @@ add_executable(space_shooter
         src/resources_manager.cpp
         src/state_manager.cpp
         src/enemy_spawner.cpp
+        src/hud_manager.cpp
 )
 
 target_compile_features(space_shooter PRIVATE cxx_std_20)
