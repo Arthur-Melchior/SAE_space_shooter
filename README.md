@@ -1,0 +1,1 @@
+to start the project use clion
